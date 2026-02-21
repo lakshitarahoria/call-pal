@@ -14,5 +14,7 @@
   "preferred_time": "morning",
   "preferred_days": ["Monday", "Thursday", "Friday"],
   "caregiver_name": "Jordan",
-  "caregiver_phone": "+14155559999"
+  "caregiver_phone": "+14155559999",
+  "theme_preference": null,
+  "onboarding_complete": false
 }
