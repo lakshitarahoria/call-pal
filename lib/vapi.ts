@@ -1,8 +1,8 @@
 import type { Intent, UserProfile, CallResult, AppMode } from './types';
 
-const VAPI_API_KEY = process.env.VAPI_API_KEY!;
-const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID!;
-const DEMO_MODE = process.env.DEMO_MODE === 'true';
+const VAPI_API_KEY = process.env.VAPI_API_KEY ?? '';
+const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID ?? '';
+const DEMO_MODE = process.env.DEMO_MODE === 'true' || !VAPI_API_KEY || !VAPI_PHONE_NUMBER_ID;
 
 function getTimeOfDayGreeting(): string {
   const hour = new Date().getHours();
@@ -115,9 +115,14 @@ export async function makeOutboundCall(
   }
 
   const data = await response.json();
+  const callId = data.id ?? data.callId ?? data.call_id ?? '';
+
+  if (!callId) {
+    throw new Error(`Vapi did not return a call id. Response: ${JSON.stringify(data)}`);
+  }
 
   return {
-    callId: data.id,
+    callId: String(callId),
     status: 'in_progress',
     message:
       mode === 'calm'

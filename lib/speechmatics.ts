@@ -1,7 +1,7 @@
 import type { TranscriptLine } from './types';
 
-const SPEECHMATICS_API_KEY = process.env.SPEECHMATICS_API_KEY!;
-const VAPI_API_KEY = process.env.VAPI_API_KEY!;
+const SPEECHMATICS_API_KEY = process.env.SPEECHMATICS_API_KEY ?? '';
+const VAPI_API_KEY = process.env.VAPI_API_KEY ?? '';
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
 const SM_BASE = 'https://asr.api.speechmatics.com/v2';
@@ -132,21 +132,35 @@ async function fetchTranscript(jobId: string): Promise<TranscriptLine[]> {
 
 // ─── Main export ─────────────────────────────────────────────────────────────
 
+const DEMO_TRANSCRIPT: TranscriptLine[] = [
+  { speaker: 'representative', text: "Thank you for calling, how can I help you?" },
+  { speaker: 'agent', text: "Hi, I'm calling on behalf of Alex regarding their appointment." },
+  { speaker: 'representative', text: "Of course, let me pull that up." },
+  { speaker: 'representative', text: "I have Thursday at 9am available." },
+  { speaker: 'agent', text: "Thursday at 9am is perfect, thank you." },
+  { speaker: 'representative', text: "All booked. Have a great day!" },
+  { speaker: 'agent', text: "Thank you so much. Goodbye." },
+];
+
 export async function getTranscript(callId: string): Promise<TranscriptLine[]> {
-  if (DEMO_MODE) {
-    return [
-      { speaker: 'representative', text: "Thank you for calling, how can I help you?" },
-      { speaker: 'agent', text: "Hi, I'm calling on behalf of Alex regarding their appointment." },
-      { speaker: 'representative', text: "Of course, let me pull that up." },
-      { speaker: 'representative', text: "I have Thursday at 9am available." },
-      { speaker: 'agent', text: "Thursday at 9am is perfect, thank you." },
-      { speaker: 'representative', text: "All booked. Have a great day!" },
-      { speaker: 'agent', text: "Thank you so much. Goodbye." },
-    ];
+  if (DEMO_MODE || callId === 'demo-123') {
+    return DEMO_TRANSCRIPT;
   }
 
-  const recordingUrl = await getCallRecordingUrl(callId);
-  const jobId = await submitTranscriptionJob(recordingUrl);
-  await waitForJob(jobId);
-  return fetchTranscript(jobId);
+  if (!SPEECHMATICS_API_KEY || !VAPI_API_KEY) {
+    return DEMO_TRANSCRIPT;
+  }
+
+  try {
+    const recordingUrl = await getCallRecordingUrl(callId);
+    const jobId = await submitTranscriptionJob(recordingUrl);
+    await waitForJob(jobId);
+    return fetchTranscript(jobId);
+  } catch (err: any) {
+    const msg = err?.message ?? '';
+    if (msg.includes('No recording available') || msg.includes('Failed to fetch call') || msg.includes('404')) {
+      return [];
+    }
+    throw err;
+  }
 }

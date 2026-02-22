@@ -1,8 +1,9 @@
 import type { Intent, UserProfile, AppMode } from './types';
 
-const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY!;
+const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY ?? '';
 const MINIMAX_BASE_URL = 'https://api.minimax.io/v1';
-const DEMO_MODE = process.env.DEMO_MODE === 'true';
+// Use demo mode when explicitly set or when no API key (e.g. local dev)
+const DEMO_MODE = process.env.DEMO_MODE === 'true' || !MINIMAX_API_KEY;
 
 // ─── Intent Extraction ───────────────────────────────────────────────────────
 

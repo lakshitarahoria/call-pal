@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ lines });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message ?? 'Failed to get transcript' },
+      { error: err?.message ?? 'Failed to get transcript' },
       { status: 500 }
     );
   }
