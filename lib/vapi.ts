@@ -2,7 +2,18 @@ import type { Intent, UserProfile, CallResult, AppMode } from './types';
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY ?? '';
 const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID ?? '';
+/** If set, all outbound calls go to this number (E.164 or 10-digit). Overrides intent.provider_phone. */
+const VAPI_CALL_TO_NUMBER = process.env.VAPI_CALL_TO_NUMBER ?? '';
 const DEMO_MODE = process.env.DEMO_MODE === 'true' || !VAPI_API_KEY || !VAPI_PHONE_NUMBER_ID;
+
+/** Normalize to E.164 for US. VAPI requires + and country code. */
+function toE164(phone: string): string {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  if (phone?.trim().startsWith('+')) return phone.trim();
+  return digits ? `+${digits}` : phone || '';
+}
 
 function getTimeOfDayGreeting(): string {
   const hour = new Date().getHours();
@@ -82,6 +93,12 @@ export async function makeOutboundCall(
   const systemPrompt = buildSystemPrompt(intent, userProfile, mode);
   const firstMessage = buildFirstMessage(intent, userProfile, mode);
 
+  const destinationNumber = toE164(VAPI_CALL_TO_NUMBER || intent.provider_phone || '');
+
+  if (!destinationNumber || destinationNumber === '+') {
+    throw new Error('No valid destination phone number. Set provider_phone in intent or VAPI_CALL_TO_NUMBER env.');
+  }
+
   const response = await fetch('https://api.vapi.ai/call', {
     method: 'POST',
     headers: {
@@ -91,8 +108,8 @@ export async function makeOutboundCall(
     body: JSON.stringify({
       phoneNumberId: VAPI_PHONE_NUMBER_ID,
       customer: {
-        number: intent.provider_phone,
-        name: intent.provider_name,
+        number: destinationNumber,
+        name: intent.provider_name || 'Customer',
       },
       assistant: {
         firstMessage,

@@ -64,6 +64,32 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Push your code to GitHub** (if you haven’t already):
+   ```bash
+   git add -A && git commit -m "Prepare for Vercel" && git push origin main
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Import the project on Vercel**
+   - Go to [vercel.com/new](https://vercel.com/new)
+   - Sign in with GitHub and select the **call-pal** repo
+   - Leave **Framework Preset** as Next.js (auto-detected)
+   - Click **Deploy** (you can add env vars before or after the first deploy)
+
+3. **Add environment variables**  
+   In the Vercel project: **Settings → Environment Variables**. Add these (use the same values as in your local `.env.local`):
+
+   | Name | Description |
+   |------|-------------|
+   | `VAPI_API_KEY` | VAPI API key |
+   | `VAPI_PHONE_NUMBER_ID` | VAPI phone number ID |
+   | `VAPI_CALL_TO_NUMBER` | Destination number for outbound calls (e.g. 4128440389) |
+   | `MINIMAX_API_KEY` | MiniMax API key (intent extraction) |
+   | `SPEECHMATICS_API_KEY` | Speechmatics API key (transcript) |
+   | `DEMO_MODE` | Set to `false` for real calls |
+
+   Then trigger a **Redeploy** (Deployments → ⋮ → Redeploy) so the new variables are used.
+
+4. **Optional: custom domain**  
+   In **Settings → Domains** you can add your own domain.
+
+Your app and API will run at `https://your-project.vercel.app`. The frontend uses the same origin for `/api/*`, so no extra config is needed.
